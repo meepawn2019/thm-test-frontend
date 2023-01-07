@@ -24,10 +24,12 @@ api.interceptors.response.use(
     const res = response.data;
     if (res?.error) {
       throw new Error(res.error);
+      alert(res.error);
     }
     return res;
   },
   (error) => {
+    alert(error);
     if (error.response) {
       const data = error.response;
       const token = getToken();

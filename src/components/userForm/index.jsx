@@ -1,17 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { useMutation, useQuery } from "react-query";
-import { getUser, updateUser } from "../../api/user";
+import { getProfile, getUser, updateUser } from "../../api/user";
 import { Formik } from "formik";
 import FormInput from "../common/FormInput";
 import AvatarUploader from "../AvatarUploader";
 import * as Yup from "yup";
 import withAuth from "../../middleware/withAuth";
+import { useNavigate, useParams } from "react-router";
+import { BASE_ROUTE } from "../../constant/route";
 
 const UserForm = () => {
+  // get user id from url react router
+  const { id } = useParams();
+  const navigate = useNavigate();
+
   // fetch user data from api
-  const { data, isLoading, isError, refetch } = useQuery("user", getUser, {
-    retry: 0,
-  });
+  const { data, isLoading, isError, refetch } = useQuery(
+    ["user", id],
+    () => getUser(id),
+    {
+      retry: 0,
+    }
+  );
 
   const [preview, setPreview] = useState(null);
   useEffect(() => {
@@ -23,6 +33,7 @@ const UserForm = () => {
   const { mutate, status } = useMutation(updateUser, {
     onSuccess: () => {
       // refetch user data after update success
+      alert("Update success");
       refetch();
     },
   });
@@ -42,6 +53,10 @@ const UserForm = () => {
     mutate({ id: data.id, data: newValues });
   };
 
+  const handleBack = () => {
+    navigate(BASE_ROUTE);
+  };
+
   if (isLoading) {
     return <div>Loading...</div>;
   }
@@ -51,18 +66,18 @@ const UserForm = () => {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center h-screen border border-gray-300 p-8 rounded-lg h-fit mx-auto">
+    <div className="flex flex-col items-center justify-center h-screen border border-gray-300 p-8 rounded-lg mx-auto">
       <h1 className="font-bold mb-8">User</h1>
       <Formik
         initialValues={{
           first_name: data.first_name,
           email: data.email,
-          last_name: data.last_name,
-          country: data.country,
-          city: data.city,
-          phone_number: data.phone_number,
-          position: data.position,
-          avatar: data.avatar,
+          last_name: data.last_name || "",
+          country: data.country || "",
+          city: data.city || "",
+          phone_number: data.phone_number || "",
+          position: data.position || "",
+          avatar: data.avatar || null,
         }}
         onSubmit={handleUpdateUser}
         validationSchema={Yup.object().shape({
@@ -194,13 +209,22 @@ const UserForm = () => {
                   touched={touched.position}
                 />
               </div>
-              <button
-                type="submit"
-                className="bg-blue-600 text-white p-2 rounded-lg mt-4 hover:bg-blue-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={status === "loading"}
-              >
-                Update
-              </button>
+              <div className="flex flex-row gap-x-4">
+                <button
+                  type="button"
+                  className="bg-gray-600 text-white p-2 rounded-lg mt-4 hover:bg-gray-700 hover:shadow-lg"
+                  onClick={handleBack}
+                >
+                  Back
+                </button>
+                <button
+                  type="submit"
+                  className="bg-blue-600 text-white p-2 rounded-lg mt-4 hover:bg-blue-700 hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                  disabled={status === "loading"}
+                >
+                  Update
+                </button>
+              </div>
             </form>
           );
         }}
